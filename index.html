@@ -3,11 +3,28 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="//fonts.googleapis.com/css?family=Nerko+One:300,400,600,700&amp;lang=en" />
+    <link rel="stylesheet" href="//fonts.googleapis.com/css?family=Bellefair:300,400,600,700&amp;lang=en" />
     <script src="script.js" defer></script>
     <link rel="stylesheet" href="styles.css">
     <title>Tic-Tac-Toe</title>
 </head>
 <body>
-    
+    <dialog id="submit-players">
+        <form action="script.js" id="submit-players-form">
+          <label for="player1">Player 1 Name</label>
+          <input type="text" name="player1" placeholder="John" required>
+          <label for="player2">Player 2 Name</label>
+          <input type="text" name="player2" placeholder="Ana" required>
+          <button type="submit" class="submit-names">Submit</button>
+        </form>
+    </dialog>
+    <div class="gameboard">
+
+    </div>
+    <div class="buttons">
+        <button class="start-game">Start Game</button>
+        <button class="restart-game">Restart Game</button>
+    </div>
 </body>
 </html>
