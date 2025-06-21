@@ -27,8 +27,8 @@ const UIController = (function () {
         gameStatus.textContent = `${winner} won the game!`;
     }
 
-    function updateScoreboard(players, scores){
-        scoreBoard.textContent = `${players[0]}: ${scores[0]} - ${scores[1]} :${players[1]}`;
+    function updateScoreboard(players){
+        scoreBoard.textContent = `${players[0].name}: ${players[0].getScore()} - ${players[1].getScore()} :${players[1].name}`;
     }
 
     function updateUI(y, x, char) {
@@ -38,8 +38,8 @@ const UIController = (function () {
 
     function resetBoard(){
         for(let row = 0; row < 3; row++)
-            for(let column; column < 3; column++)
-                updateUI(row, column, '-');
+            for(let column = 0; column < 3; column++)
+                updateUI(row, column, '');
     }
 
     return {
@@ -53,7 +53,7 @@ function createPlayer(name, symbol) {
     const getScore = () => score;
     const increaseScore = () => score++;
 
-    return {name, score, symbol,  getScore, increaseScore};
+    return {name, symbol,  getScore, increaseScore};
 }
 
 const GameBoard = (function() {
@@ -97,15 +97,21 @@ const GameBoard = (function() {
                         return; 
                     }
                     const gameStatus = makePlay(row, column, players[playerPointer].symbol);
-                    if(gameStatus == 1 || gameStatus == -1)
+                    if(gameStatus == 1 || gameStatus == -1){
                         gameEnded = true;
+                        UIController.winningMessage(players[playerPointer].name);
+                        players[playerPointer].increaseScore();
+                        UIController.updateScoreboard(players, );
+                        return;
+                    }
                     playerPointer = (playerPointer + 1) % 2;
+                    UIController.changeGameStatus(players[playerPointer].name);
                 });
             }
         }
     }
 
-    // Function that makes a play and returns whether it's a wining play or not, or even if it's a tying play
+    // Function that makes a play and returns whether it's a winning play or not, or even if it's a tying play
     function makePlay(yPosition, xPosition, char) {
         board[yPosition][xPosition] = char;
         UIController.updateUI(yPosition, xPosition, char);
@@ -150,7 +156,7 @@ const GameBoard = (function() {
 
         min = Math.min(x, y);
 
-        for(let xAux = x - min, yAux = y - min; xAux < board.length && yAux < board.length; xAux++, yAux++) {
+        for(let xAux = x - min, yAux = y - min; xAux < board.length && yAux >= 0; xAux++, yAux--) {
             if(board[yAux][xAux] === char)
                 counter++;
         }
@@ -181,15 +187,27 @@ const GameBoard = (function() {
         gameEnded = false;
         playerPointer = 0;
         UIController.resetBoard();
+        console.log(boardToString());
+        for(let row = 0; row < board.length; row++) {
+            for(let column = 0; column < board[0].length; column++){
+                board[row][column] = '-';
+            }
+        }
+        console.log(boardToString());
     }
 
     function setPlayers(newPlayers){
         players = newPlayers;
-        console.log(players);
-        
+        clearBoard();
+        UIController.changeGameStatus(players[0].name);
+        UIController.updateScoreboard(players);
     }
 
     addListenersToBoxes();
+
+    document.querySelector(".restart-game").addEventListener("click", () => {
+        clearBoard();
+    });
 
     return {
         clearBoard, setPlayers,
