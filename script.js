@@ -1,5 +1,9 @@
+// Handles changing the UI to reflect game state, does not handle receiving information from UI
+
 const UIController = (function () {
-    board = document.querySelector(".gameboard");
+    const board = document.querySelector(".gameboard");
+    const gameStatus = document.querySelector(".game-status");
+    const scoreBoard = document.querySelector(".score");
 
     function makeBoard() {
         for(let row = 0; row < 3; row++)
@@ -14,13 +18,32 @@ const UIController = (function () {
 
     makeBoard();
 
+    // Tells the player who's turn it is 
+    function changeGameStatus(toPlay) {
+        gameStatus.textContent = `${toPlay}'s turn to play`;
+    }
+
+    function winningMessage(winner){
+        gameStatus.textContent = `${winner} won the game!`;
+    }
+
+    function updateScoreboard(players, scores){
+        scoreBoard.textContent = `${players[0]}: ${scores[0]} - ${scores[1]} :${players[1]}`;
+    }
+
     function updateUI(y, x, char) {
         const box = document.getElementsByClassName(`row${y} column${x}`);
         box[0].textContent = char;
     }
 
+    function resetBoard(){
+        for(let row = 0; row < 3; row++)
+            for(let column; column < 3; column++)
+                updateUI(row, column, '-');
+    }
+
     return {
-        updateUI,
+        updateUI, changeGameStatus, winningMessage, updateScoreboard, resetBoard,
     };
 
 })();
@@ -38,6 +61,9 @@ const GameBoard = (function() {
     // We'll use this to keep track of ties, when the total number of plays is equal to the playable slots and nobody won it's a tie
     const playableSlots = board.length * board[0].length;
     let plays = 0;
+    let players = [];
+    let playerPointer = 0;
+    let gameEnded = false;
 
     // Function that shows a string with the board status
     function boardToString(){
@@ -52,6 +78,31 @@ const GameBoard = (function() {
         }
 
         return boardRepresentation;
+    }
+
+    function addListenersToBoxes(){
+        for(let row = 0; row < board.length; row++) {
+            for(let column = 0; column < board.length; column++){
+                document.getElementsByClassName(`row${row} column${column}`)[0].addEventListener("click", () => {
+                    if(players.length == 0) {
+                        alert("You need to hit start game and set the names before playing");
+                        return;
+                    }
+                    if(gameEnded) {
+                        alert("This game has already been won/tied, hit the reset button to play again");
+                        return;
+                    }
+                    if(board[row][column] != '-') {
+                        alert("This square has already been played");
+                        return; 
+                    }
+                    const gameStatus = makePlay(row, column, players[playerPointer].symbol);
+                    if(gameStatus == 1 || gameStatus == -1)
+                        gameEnded = true;
+                    playerPointer = (playerPointer + 1) % 2;
+                });
+            }
+        }
     }
 
     // Function that makes a play and returns whether it's a wining play or not, or even if it's a tying play
@@ -127,63 +178,50 @@ const GameBoard = (function() {
 
     function clearBoard() {
         plays = 0;
-        for(let row = 0; row < board.length; row++) {
-            for(let column = 0; column < board[row].length; column++)
-                board[row][column] = "-";
-        }
+        gameEnded = false;
+        playerPointer = 0;
+        UIController.resetBoard();
     }
 
+    function setPlayers(newPlayers){
+        players = newPlayers;
+        console.log(players);
+        
+    }
+
+    addListenersToBoxes();
+
     return {
-        boardToString, makePlay, clearBoard,
+        clearBoard, setPlayers,
     }
 
 })();
-
-console.log(GameBoard.boardToString());
-GameBoard.makePlay(1, 1, "X");
-console.log(GameBoard.boardToString());
-GameBoard.makePlay(0, 2, "O");
-console.log(GameBoard.boardToString());
-GameBoard.makePlay(0, 1, "X");
-console.log(GameBoard.boardToString());
-GameBoard.makePlay(0, 0, "X");
-console.log(GameBoard.boardToString());
-GameBoard.makePlay(2, 2, "X");
-console.log(GameBoard.boardToString());
-GameBoard.makePlay(1, 2, "O");
-console.log(GameBoard.boardToString());
-GameBoard.makePlay(1, 0, "O");
-console.log(GameBoard.boardToString());
-GameBoard.makePlay(2, 0, "O");
-console.log(GameBoard.boardToString());
-const tie = GameBoard.makePlay(2, 1, "O");
-console.log(GameBoard.boardToString());
-console.log(tie);
 
 
 
 const GameController = (function() {
 
-    let player1, player2;
-    const submitNewPlayers = document.querySelector(".submit-names");
+    const submitNewPlayers = document.querySelector("#submit-players-form");
+    const inputWindow = document.querySelector("#submit-players");
 
     async function assignPlayers(){
         let newPlayersData = new FormData(submitNewPlayers);
-        player1 = createPlayer(newPlayersData.get("name1"), "O");
-        player2 = createPlayer(newPlayersData.get("name2"), "X");
-        console.log("hi");
-        
-    }
-
-    function getNames(){
-        const inputWindow = document.querySelector("#submit-players");
-        inputWindow.showModal();
+        let players = [];
+        players.push(createPlayer(newPlayersData.get("player1"), "O"));
+        players.push(createPlayer(newPlayersData.get("player2"), "X"));
+        GameBoard.setPlayers(players);
+        inputWindow.close();
     }
 
     submitNewPlayers.addEventListener("submit", (e) => {
         e.preventDefault();
         assignPlayers();
     });
+
+    function getNames(){
+        const inputWindow = document.querySelector("#submit-players");
+        inputWindow.showModal();
+    }
 
     return {
         getNames,

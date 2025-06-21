@@ -62,12 +62,20 @@ body {
     background-color: rgb(255, 221, 153);
 }
 
+.game-status {
+    font-size: 2rem;
+}
+
+.score {
+    font-size: 3rem;
+}
+
 .gameboard {
     font-family: "Nerko One";
     display: grid;
     grid-template-columns: repeat(3, 150px);
     grid-template-rows: repeat(3, 150px);
-    gap: 50px;
+    gap: 30px;
     grid-auto-flow: column;
 }
 
